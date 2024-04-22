@@ -1,4 +1,14 @@
 .env
 *.json
-/models/*.pth
+/input/
+/input/input_blackwhite/
+/input/input_color/
 .idea
+/models/
+/models/color/
+/models/blackwhite/
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.bmp
