@@ -8,36 +8,14 @@ from PIL import Image
 
 # from upscale import Upscale
 
+GIGABYTE = 1000000000
+
 SETTINGS_FILENAME = "settings.json"
 BASE_FORMAT = {
     "DefaultBlackWhiteModel": "",
     "DefaultColorModel": "",
     "DefaultBitmapBehavior": False,
 }
-
-
-def get_input_files():
-    return False
-
-
-def get_output_files():
-    return False
-
-
-def download_file(file_id, file_name):
-    return False
-
-
-def upload_file(file_path, file_name):
-    return False
-
-
-def get_new_files():
-    return False
-
-
-def download_new_files(new_files):
-    return False
 
 
 def create_folders():
@@ -59,6 +37,11 @@ def create_image_folders():
 
     if not os.path.exists(color_folder_path):
         os.mkdir(color_folder_path)
+
+    output_folder = os.path.join(os.getcwd(), "output")
+
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
 
 
 def create_model_folders():
@@ -140,10 +123,12 @@ def get_default_black_white_model() -> Optional[str]:
 
     with open(SETTINGS_FILENAME, "r+") as file:
         file_data = json.load(file)
-        model = file_data["DefaultBlackWhiteModel"]
-        if model == "":
-            return None
-        return model
+
+    model = file_data["DefaultBlackWhiteModel"]
+    if model == "":
+        return None
+
+    return model
 
 
 def get_default_color_model() -> Optional[str]:
@@ -151,10 +136,12 @@ def get_default_color_model() -> Optional[str]:
 
     with open(SETTINGS_FILENAME, "r+") as file:
         file_data = json.load(file)
-        model = file_data["DefaultColorModel"]
-        if model == "":
-            return None
-        return model
+
+    model = file_data["DefaultColorModel"]
+    if model == "":
+        return None
+
+    return model
 
 
 def set_default_black_white_model(model_name: str) -> bool:
@@ -163,9 +150,11 @@ def set_default_black_white_model(model_name: str) -> bool:
 
     with open(SETTINGS_FILENAME, "r+") as file:
         file_data = json.load(file)
-        if model_name not in bw_models:
-            return False
-        file_data["DefaultBlackWhiteModel"] = model_name
+
+    if model_name not in bw_models:
+        return False
+
+    file_data["DefaultBlackWhiteModel"] = model_name
 
     with open(SETTINGS_FILENAME, "w") as file:
         json.dump(file_data, file, indent=4)
@@ -179,14 +168,49 @@ def set_default_color_model(model_name: str) -> bool:
 
     with open(SETTINGS_FILENAME, "r+") as file:
         file_data = json.load(file)
-        if model_name not in c_models:
-            return False
-        file_data["DefaultColorModel"] = model_name
+
+    if model_name not in c_models:
+        return False
+
+    file_data["DefaultColorModel"] = model_name
 
     with open(SETTINGS_FILENAME, "w") as file:
         json.dump(file_data, file, indent=4)
 
     return True
+
+
+def get_default_bitmap_behavior() -> Optional[bool]:
+    initialize_settings_file()
+
+    with open(SETTINGS_FILENAME, "r+") as file:
+        file_data = json.load(file)
+
+    mode = file_data["DefaultBitmapBehavior"]
+    return mode
+
+
+def set_default_bitmap_behavior(bitmap: bool) -> bool:
+    initialize_settings_file()
+
+    with open(SETTINGS_FILENAME, "r+") as file:
+        file_data = json.load(file)
+
+    file_data["DefaultBitmapBehavior"] = bitmap
+
+    with open(SETTINGS_FILENAME, "w") as file:
+        json.dump(file_data, file, indent=4)
+
+    return True
+
+
+def get_settings() -> dict:
+    initialize_settings_file()
+
+    with open(SETTINGS_FILENAME, "r+") as file:
+        file_data = json.load(file)
+
+    return file_data
 
 
 def is_grey_scale(img_path) -> bool:
@@ -231,7 +255,7 @@ def sort_input_images() -> None:
                     )
 
 
-def unzip(zip_file_path: str) -> None:
+def unzip_files(zip_file_path: str) -> None:
     # Unzip the file
     print(zip_file_path)
     input_folder = path.join(getcwd(), "input")
@@ -271,6 +295,68 @@ def unzip(zip_file_path: str) -> None:
             os.remove(zip_file_path)
 
 
+def get_file_size(file_path: str) -> int:
+    file_stats = os.stat(file_path)
+    return file_stats.st_size
+
+
+def zip_files(file_paths: List[str], zip_file_name: str):
+    output_folder = os.path.join(os.getcwd(), "output")
+    with zipfile.ZipFile(zip_file_name, "w") as zip_file:
+        for file in file_paths:
+            zip_file.write(
+                os.path.join(output_folder, file),
+                os.path.basename(os.path.join(output_folder, file)),
+                compress_type=zipfile.ZIP_DEFLATED,
+            )
+
+
+def create_output_zip_files() -> List:
+    output_folder = os.path.join(os.getcwd(), "output")
+    created_zip_files = []
+
+    current_zip_file_size = 0
+    current_zip_file_contained_files = []
+    for file in os.listdir(output_folder):
+        if not file.lower().endswith(".png") and not file.lower().endswith(".bmp"):
+            continue
+        file_size = get_file_size(os.path.join(output_folder, file))
+        if current_zip_file_size + file_size > GIGABYTE:
+            created_zip_files.append(
+                {
+                    "filename": "output" + str(len(created_zip_files) + 1) + ".zip",
+                    "files": current_zip_file_contained_files,
+                    "size": current_zip_file_size,
+                }
+            )
+            zip_files(
+                current_zip_file_contained_files,
+                os.path.join(
+                    output_folder, "output" + str(len(created_zip_files)) + ".zip"
+                ),
+            )
+            current_zip_file_size = file_size
+            current_zip_file_contained_files = [file]
+
+        else:
+            current_zip_file_size += file_size
+            current_zip_file_contained_files.append(file)
+
+    created_zip_files.append(
+        {
+            "filename": "output_" + str(len(created_zip_files) + 1) + ".zip",
+            "files": current_zip_file_contained_files,
+            "size": current_zip_file_size,
+        }
+    )
+    zip_files(
+        current_zip_file_contained_files,
+        os.path.join(output_folder, "output_" + str(len(created_zip_files)) + ".zip"),
+    )
+
+    return created_zip_files
+
+
 """def upscaling_process(channel, upscaler):
     print("Looking for new files...")
 
@@ -307,5 +393,3 @@ def unzip(zip_file_path: str) -> None:
 
     print("Process complete")
     num_new_files = 0"""
-
-initialize_settings_file()

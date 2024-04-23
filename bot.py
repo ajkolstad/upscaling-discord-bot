@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import discord
-
 import upscaler
+
 from upscale import Upscale
 
 
@@ -33,7 +33,9 @@ def run_discord_bot():
         if user_message[0] == "!":
             user_message = user_message[1:]
 
-            p_message = user_message.lower()
+            user_command = user_message.lower()
+
+            handle_command(user_command, user_id)
 
             if p_message == "upscale v1":
                 response = (

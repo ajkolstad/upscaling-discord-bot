@@ -8,7 +8,14 @@ import datetime
 import json
 import os
 
-from lib import CatBox, add_content, remove_content, LitterBox, unzip, sort_input_images
+from lib import (
+    CatBox,
+    add_content,
+    remove_content,
+    LitterBox,
+    unzip_files,
+    sort_input_images,
+)
 
 STORAGE_FILENAME = "catbox_storage.json"
 
@@ -99,6 +106,6 @@ upload_url = "https://files.catbox.moe/wj3fu7.zip"
 # print("Downloading file...")
 # res = litterbox_client.file_download(upload_url)
 print("Unzipping file...")
-unzip("./input/wj3fu7.zip")
+unzip_files("./input/wj3fu7.zip")
 print("Sorting images...")
 sort_input_images()

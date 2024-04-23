@@ -1,6 +1,7 @@
 import mimetypes
 import sys
 from os import path, getcwd
+from typing import Optional
 
 import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
@@ -29,7 +30,7 @@ class LitterBox:
         sys.stdout.write("{}|".format(" " * (20 - progress)))
         sys.stdout.flush()
 
-    def file_upload(self, filename: str, time: int):
+    def file_upload(self, filename: str, time: int) -> Optional[str]:
         if time == 1:
             time_formatted = "1h"
         elif time == 12:
