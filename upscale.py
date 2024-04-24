@@ -187,9 +187,9 @@ class Upscale:
                     progress.advance(task_upscaling)
                     continue
                 # read image
-                img = cv2.imread(str(img_path.absolute()), cv2.IMREAD_GRAYSCALE)
-                if len(img.shape) < 3:
-                    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+                img = cv2.imread(str(img_path.absolute()), cv2.IMREAD_UNCHANGED)
+                # if len(img.shape) < 3:
+                #     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
                 # Seamless modes
                 if self.seamless == SeamlessOptions.TILE:

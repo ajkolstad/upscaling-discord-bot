@@ -8,7 +8,7 @@ from PIL import Image
 
 # from upscale import Upscale
 
-GIGABYTE = 1000000000
+MAX_SIZE = 100000000
 
 SETTINGS_FILENAME = "settings.json"
 BASE_FORMAT = {
@@ -21,6 +21,7 @@ BASE_FORMAT = {
 def create_folders():
     create_image_folders()
     create_model_folders()
+    initialize_settings_file()
 
 
 def create_image_folders():
@@ -31,12 +32,16 @@ def create_image_folders():
 
     black_white_folder_path = os.path.join(input_folder, "input_blackwhite")
     color_folder_path = os.path.join(input_folder, "input_color")
+    pre_bitmap_folder_path = os.path.join(input_folder, "output_pre_bitmap")
 
     if not os.path.exists(black_white_folder_path):
         os.mkdir(black_white_folder_path)
 
     if not os.path.exists(color_folder_path):
         os.mkdir(color_folder_path)
+
+    if not os.path.exists(pre_bitmap_folder_path):
+        os.mkdir(pre_bitmap_folder_path)
 
     output_folder = os.path.join(os.getcwd(), "output")
 
@@ -234,10 +239,7 @@ def sort_input_images() -> None:
     color_folder_path = os.path.join(input_folder, "input_color")
 
     for file in os.listdir(input_folder):
-        print(file)
-        print(os.path.isfile(os.path.join(input_folder, file)))
         if os.path.isfile(os.path.join(input_folder, file)):
-            print(file)
             if (
                 file.lower().endswith("png")
                 or file.lower().endswith("jpg")
@@ -257,7 +259,6 @@ def sort_input_images() -> None:
 
 def unzip_files(zip_file_path: str) -> None:
     # Unzip the file
-    print(zip_file_path)
     input_folder = path.join(getcwd(), "input")
     with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
         zip_ref.extractall(input_folder)
@@ -278,17 +279,16 @@ def unzip_files(zip_file_path: str) -> None:
                 ):
 
                     target = os.path.join(root, file)
-                    print("Image: " + str(target))
                     os.replace(target, os.path.join(os.path.join(input_folder, file)))
                 else:
                     target = os.path.join(root, file)
-                    print("Delete: " + str(target))
                     os.remove(os.path.join(root, file))
 
             if not str(root).endswith("input_color") and not str(root).endswith(
                 "input_blackwhite"
+            ) and not str(root).endswith(
+                "output_pre_bitmap"
             ):
-                print("Root: " + str(root))
                 os.rmdir(root)
 
         if os.path.isfile(zip_file_path):
@@ -321,10 +321,10 @@ def create_output_zip_files() -> List:
         if not file.lower().endswith(".png") and not file.lower().endswith(".bmp"):
             continue
         file_size = get_file_size(os.path.join(output_folder, file))
-        if current_zip_file_size + file_size > GIGABYTE:
+        if current_zip_file_size + file_size > MAX_SIZE:
             created_zip_files.append(
                 {
-                    "filename": "output" + str(len(created_zip_files) + 1) + ".zip",
+                    "filename": "output_" + str(len(created_zip_files) + 1) + ".zip",
                     "files": current_zip_file_contained_files,
                     "size": current_zip_file_size,
                 }
@@ -332,7 +332,7 @@ def create_output_zip_files() -> List:
             zip_files(
                 current_zip_file_contained_files,
                 os.path.join(
-                    output_folder, "output" + str(len(created_zip_files)) + ".zip"
+                    output_folder, "output_" + str(len(created_zip_files)) + ".zip"
                 ),
             )
             current_zip_file_size = file_size
@@ -355,41 +355,3 @@ def create_output_zip_files() -> List:
     )
 
     return created_zip_files
-
-
-"""def upscaling_process(channel, upscaler):
-    print("Looking for new files...")
-
-    new_files = get_new_files()
-
-    if len(new_files) == 0:
-        print(
-            "I looked for new files to upscale, but I didn't find any. If you want me to upscale images again, delete all of the images in the Output folder, then run `!upscale` again."
-        )
-        return
-
-    download_new_files(new_files)
-
-    upscale = Upscale(
-        model=upscaler,
-        input=Path("input"),
-        output=Path("output"),
-        reverse=False,
-        skip_existing=True,
-        delete_input=False,
-        seamless=False,
-        cpu=False,
-        fp16=(upscaler != V2_PATH),
-        device_id=0,
-        cache_max_split_depth=False,
-        binary_alpha=False,
-        ternary_alpha=False,
-        alpha_threshold=0.5,
-        alpha_boundary_offset=0.2,
-        alpha_mode=None,
-    )
-
-    upscale.run()
-
-    print("Process complete")
-    num_new_files = 0"""

@@ -14,6 +14,9 @@ from lib import (
     LitterBox,
     unzip_files,
     sort_input_images,
+    create_folders,
+    get_default_bitmap_behavior,
+    convert_all_to_bitmap,
 )
 from upscale import Upscale
 
@@ -107,9 +110,19 @@ def list_settings():
     settings = get_settings()
 
 
-def upscale_using_link(link_to_zip: str, bw_model: str = None, c_model: str = None):
+def upscale_process(
+    link_to_zip: str,
+    bw_model: str = None,
+    c_model: str = None,
+    bitmap_mode: bool = False,
+):
     # Download files
     litterbox_client = LitterBox()
+
+    output_folder = os.path.join(os.getcwd(), "output")
+    bw_models_folder = os.path.join(os.getcwd(), "models/blackwhite")
+    c_models_folder = os.path.join(os.getcwd(), "models/color")
+
     downloaded_file = litterbox_client.file_download(link_to_zip)
 
     # Unzip files
@@ -119,21 +132,23 @@ def upscale_using_link(link_to_zip: str, bw_model: str = None, c_model: str = No
     sort_input_images()
 
     # Upscaling
-    output_folder = os.path.join(os.getcwd(), "output")
-    bw_models_folder = os.path.join(os.getcwd(), "models/blackwhite")
-    c_models_folder = os.path.join(os.getcwd(), "models/color")
 
     # Upscale the bw images
     if bw_model is None:
         bw_model = os.path.join(bw_models_folder, get_default_black_white_model())
 
+    if bitmap_mode:
+        bw_output_path = Path("input/output_pre_bitmap")
+    else:
+        bw_output_path = Path("output")
+
     upscale = Upscale(
         model=bw_model,
         input=Path("input/input_blackwhite"),
-        output=Path("output"),
+        output=bw_output_path,
         reverse=False,
-        skip_existing=True,
-        delete_input=False,
+        skip_existing=False,
+        delete_input=True,
         # seamless=False,
         cpu=False,
         fp16=True,
@@ -156,8 +171,8 @@ def upscale_using_link(link_to_zip: str, bw_model: str = None, c_model: str = No
         input=Path("input/input_color"),
         output=Path("output"),
         reverse=False,
-        skip_existing=True,
-        delete_input=False,
+        skip_existing=False,
+        delete_input=True,
         # seamless=False,
         cpu=False,
         fp16=True,
@@ -170,6 +185,9 @@ def upscale_using_link(link_to_zip: str, bw_model: str = None, c_model: str = No
         alpha_mode=None,
     )
     upscale.run()
+
+    if bitmap_mode:
+        convert_all_to_bitmap()
 
     # Prepare the files for upload to Litterbox by zipping them in groups of 1 gigabyte
     zip_files = create_output_zip_files()
@@ -189,4 +207,4 @@ def upscale_using_link(link_to_zip: str, bw_model: str = None, c_model: str = No
     return message
 
 
-print(upscale_using_link("https://files.catbox.moe/wj3fu7.zip"))
+print(upscale_process("https://files.catbox.moe/wj3fu7.zip", bitmap_mode=False))
