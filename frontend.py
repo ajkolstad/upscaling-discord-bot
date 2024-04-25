@@ -9,19 +9,19 @@ from lib import (
     get_default_color_model,
     set_default_black_white_model,
     set_default_color_model,
-    get_settings,
+    get_default_bitmap_behavior,
+    set_default_bitmap_behavior,
     create_output_zip_files,
     LitterBox,
     unzip_files,
     sort_input_images,
-    create_folders,
-    get_default_bitmap_behavior,
     convert_all_to_bitmap,
+    clean_up,
 )
 from upscale import Upscale
 
 
-def list_all_models():
+def list_all_models() -> str:
     bw_models, c_models = get_all_models()
     default_bw_model = get_default_black_white_model()
     default_c_model = get_default_color_model()
@@ -44,7 +44,7 @@ def list_all_models():
     return message
 
 
-def list_bw_models():
+def list_bw_models() -> str:
     bw_models = get_black_white_models()
     default_bw_model = get_default_black_white_model()
     message = ""
@@ -60,7 +60,7 @@ def list_bw_models():
     return message
 
 
-def list_c_models():
+def list_c_models() -> str:
     c_models = get_color_models()
     default_c_model = get_default_color_model()
     message = ""
@@ -76,7 +76,7 @@ def list_c_models():
     return message
 
 
-def set_default_bw_model(model_name):
+def set_default_bw_model(model_name) -> str:
     if set_default_black_white_model(model_name):
         return "Default Black and White Model has been set to `" + model_name + "`"
     bw_models = get_black_white_models()
@@ -91,7 +91,7 @@ def set_default_bw_model(model_name):
         )
 
 
-def set_default_c_model(model_name):
+def set_default_c_model(model_name) -> str:
     if set_default_color_model(model_name):
         return "Default Color Model has been set to `" + model_name + "`"
     c_models = get_color_models()
@@ -106,8 +106,47 @@ def set_default_c_model(model_name):
         )
 
 
-def list_settings():
-    settings = get_settings()
+def set_bitmap_mode(bitmap_mode: str) -> str:
+    if bitmap_mode.lower() == "true" or bitmap_mode.lower() == "t":
+        bitmap_mode_bool = True
+    elif bitmap_mode.lower() == "false" or bitmap_mode.lower() == "f":
+        bitmap_mode_bool = False
+    else:
+        return "# Error\nBitmap mode must be true or false [`true, false, t, f`]"
+
+    if set_default_bitmap_behavior(bitmap_mode_bool):
+        return "Bitmap mode has been set to `" + str(bitmap_mode_bool) + "`"
+
+
+def list_settings() -> str:
+    default_color_model = get_default_color_model()
+    default_black_white_model = get_default_black_white_model()
+    bitmap_behavior = get_default_bitmap_behavior()
+    message = (
+        "# Settings:\nDefault color upscaling model: `"
+        + str(default_color_model)
+        + "`\nDefault black and white upscaling model: `"
+        + str(default_black_white_model)
+        + "`\nConvert black and white images to bitmap: `"
+        + str(bitmap_behavior)
+        + "`"
+    )
+    return message
+
+
+def list_commands() -> str:
+    return (
+        "# Commands"
+        + "\n- `!help`: Shows this message"
+        + "\n- `!set model blackwhite [modelname]`: Sets the black and white upscaling model to the provided model"
+        + "\n- `!set model color [modelname]`: Sets the color upscaling model to the provided model"
+        + "\n- `!set bitmap [true/false]`: Sets whether to convert black and white images to bitmaps or not"
+        + "\n- `!show models all`: Displays all available upscaling models"
+        + "\n- `!show models blackwhite`: Displays list of available black and white upscaling models"
+        + "\n- `!show models color`: Displays list of available color upscaling models"
+        + "\n- `!show settings`: Displays current settings"
+        + "\n- `!upscale [link]`: Provided a catbox.moe link or an image file or zip containing images, will download the images and upscale them using the current settings"
+    )
 
 
 def upscale_process(
@@ -115,7 +154,7 @@ def upscale_process(
     bw_model: str = None,
     c_model: str = None,
     bitmap_mode: bool = False,
-):
+) -> str:
     # Download files
     litterbox_client = LitterBox()
 
@@ -125,11 +164,25 @@ def upscale_process(
 
     downloaded_file = litterbox_client.file_download(link_to_zip)
 
-    # Unzip files
-    unzip_files(downloaded_file)
+    if "error" in downloaded_file.lower():
+        clean_up()
+        return downloaded_file
 
-    # Sort images based on color/bw
-    sort_input_images()
+    if downloaded_file.lower().endswith(".zip"):
+        # Unzip files
+        unzip_files(downloaded_file)
+        # Sort images based on color/bw
+        sort_input_images()
+    else:
+        if (
+            not downloaded_file.lower().endswith(".png")
+            and not downloaded_file.lower().endswith(".jpg")
+            and not downloaded_file.lower().endswith(".jpeg")
+        ):
+            clean_up()
+            return (
+                "# Error:\nFile must be a PNG or a JPG format (`*.png, *.jpg, *.jpeg`)"
+            )
 
     # Upscaling
 
@@ -204,7 +257,34 @@ def upscale_process(
         for file in sorted(zip_file["files"]):
             message += "\n - " + str(file)
 
+    clean_up()
     return message
 
 
-print(upscale_process("https://files.catbox.moe/wj3fu7.zip", bitmap_mode=False))
+def handle_command(message: str) -> str:
+    message_args = message.lower().split()
+    print(message_args)
+
+    if message_args[0] == "set":
+        if message_args[1] == "model":
+            if message_args[2] == "blackwhite":
+                return set_default_bw_model(message_args[3])
+            if message_args[2] == "color":
+                return set_default_c_model(message_args[3])
+        if message_args[1] == "bitmap":
+            return set_bitmap_mode(message_args[2])
+    if message_args[0] == "show":
+        if message_args[1] == "models":
+            if message_args[2] == "all":
+                return list_all_models()
+            if message_args[2] == "blackwhite":
+                return list_bw_models()
+            if message_args[2] == "color":
+                return list_c_models()
+        if message_args[1] == "settings":
+            return list_settings()
+    if message_args[0] == "help":
+        return list_commands()
+    if message_args[0] == "upscale":
+        return upscale_process(message_args[1])
+    return "I'm sorry, but I did not understand that command\n" + list_commands()

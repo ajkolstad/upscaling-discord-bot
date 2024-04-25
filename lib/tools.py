@@ -24,6 +24,35 @@ def create_folders():
     initialize_settings_file()
 
 
+def clean_up():
+    create_image_folders()
+    input_folder = os.path.join(os.getcwd(), "input")
+    black_white_folder_path = os.path.join(input_folder, "input_blackwhite")
+    color_folder_path = os.path.join(input_folder, "input_color")
+    pre_bitmap_folder_path = os.path.join(input_folder, "output_pre_bitmap")
+    output_folder = os.path.join(os.getcwd(), "output")
+
+    for file in os.listdir(input_folder):
+        if os.path.isfile(os.path.join(input_folder, file)):
+            os.remove(os.path.join(input_folder, file))
+
+    for file in os.listdir(black_white_folder_path):
+        if os.path.isfile(os.path.join(black_white_folder_path, file)):
+            os.remove(os.path.join(black_white_folder_path, file))
+
+    for file in os.listdir(color_folder_path):
+        if os.path.isfile(os.path.join(color_folder_path, file)):
+            os.remove(os.path.join(color_folder_path, file))
+
+    for file in os.listdir(pre_bitmap_folder_path):
+        if os.path.isfile(os.path.join(pre_bitmap_folder_path, file)):
+            os.remove(os.path.join(pre_bitmap_folder_path, file))
+
+    for file in os.listdir(output_folder):
+        if os.path.isfile(os.path.join(output_folder, file)):
+            os.remove(os.path.join(output_folder, file))
+
+
 def create_image_folders():
     input_folder = os.path.join(os.getcwd(), "input")
 
@@ -266,10 +295,7 @@ def unzip_files(zip_file_path: str) -> None:
     directories = os.listdir(input_folder)
 
     for item in directories:
-        # Go to subfolder
         folder = os.path.join(input_folder, item)
-        # print("Folder: " + str(folder))
-        # Find the file
         for root, dirs, files in os.walk(folder):
             for file in files:
                 if (
@@ -281,13 +307,12 @@ def unzip_files(zip_file_path: str) -> None:
                     target = os.path.join(root, file)
                     os.replace(target, os.path.join(os.path.join(input_folder, file)))
                 else:
-                    target = os.path.join(root, file)
                     os.remove(os.path.join(root, file))
 
-            if not str(root).endswith("input_color") and not str(root).endswith(
-                "input_blackwhite"
-            ) and not str(root).endswith(
-                "output_pre_bitmap"
+            if (
+                not str(root).endswith("input_color")
+                and not str(root).endswith("input_blackwhite")
+                and not str(root).endswith("output_pre_bitmap")
             ):
                 os.rmdir(root)
 
@@ -355,3 +380,6 @@ def create_output_zip_files() -> List:
     )
 
     return created_zip_files
+
+
+clean_up()

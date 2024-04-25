@@ -66,15 +66,23 @@ class LitterBox:
 
     @staticmethod
     def file_download(url: str):
-        filename = url[url.index(".moe/") + 5 :]
-        input_folder = path.join(getcwd(), "input")
-        file_path = path.join(input_folder, filename)
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with open(file_path, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    # If you have chunk encoded response uncomment if
-                    # and set chunk_size parameter to None.
-                    if chunk:
-                        f.write(chunk)
-        return file_path
+        try:
+            filename = url[url.index(".moe/") + 5 :]
+            input_folder = path.join(getcwd(), "input")
+            file_path = path.join(input_folder, filename)
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                with open(file_path, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        # If you have chunk encoded response uncomment if
+                        # and set chunk_size parameter to None.
+                        if chunk:
+                            f.write(chunk)
+            return file_path
+        except ValueError:
+            return (
+                "# Error:\nPlease use a [catbox.moe](https://catbox.moe/) link "
+                + "or a [litterbox.catbox.moe](https://litterbox.catbox.moe/) link"
+            )
+        except requests.exceptions.HTTPError:
+            return "# Error:\nInvalid link. Please check to ensure the link is valid."

@@ -1,4 +1,3 @@
-import glob
 import os
 
 from PIL import Image
@@ -33,4 +32,3 @@ def convert_all_to_bitmap() -> bool:
         if res is False:
             return False
     return True
-

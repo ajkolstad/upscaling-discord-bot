@@ -7,8 +7,8 @@ typer
 discord
 responses
 
-pillow~=10.2.0
-requests~=2.31.0
-python-dotenv~=1.0.1
+pillow
+requests
+python-dotenv
 requests_toolbelt
-urllib3==1.25.11
+urllib3
