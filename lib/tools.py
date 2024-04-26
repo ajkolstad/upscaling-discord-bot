@@ -8,7 +8,8 @@ from PIL import Image
 
 # from upscale import Upscale
 
-MAX_SIZE = 100000000
+MAX_SIZE = 1000000000
+
 
 SETTINGS_FILENAME = "settings.json"
 BASE_FORMAT = {
@@ -347,6 +348,7 @@ def create_output_zip_files() -> List:
             continue
         file_size = get_file_size(os.path.join(output_folder, file))
         if current_zip_file_size + file_size > MAX_SIZE:
+            print(current_zip_file_size)
             created_zip_files.append(
                 {
                     "filename": "output_" + str(len(created_zip_files) + 1) + ".zip",

@@ -6,7 +6,7 @@ from typing import Optional
 import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
-CATBOX_URL = "https://catbox.moe/user/api.php"
+LITTERBOX_URL = "https://litterbox.catbox.moe/resources/internals/api.php"
 
 
 def get_file_type(filename):
@@ -53,7 +53,7 @@ class LitterBox:
             encoder = MultipartEncoder(fields=data)
             monitor = MultipartEncoderMonitor(encoder, callback=self._progress_bar)
             response = requests.post(
-                CATBOX_URL,
+                LITTERBOX_URL,
                 data=monitor,
                 headers={"Content-Type": monitor.content_type},
             )

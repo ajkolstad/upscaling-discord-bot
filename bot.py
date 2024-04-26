@@ -1,6 +1,7 @@
 import sys
 
 import discord
+from discord.ext import commands
 from dotenv import dotenv_values
 
 from frontend import handle_command
@@ -14,7 +15,25 @@ except KeyError:
     sys.exit(0)
 
 
-def run_discord_bot():
+intents = discord.Intents.default()
+intents.message_content = True
+client = commands.Bot(command_prefix="!", intents=intents)
+
+
+@client.event
+async def on_ready():
+    print(str(client.user) + " is now running!")
+
+
+@client.command(pass_context=True)
+async def upscaler(ctx, *args):
+    await ctx.send(handle_command(list(args)))
+
+
+client.run(DISCORD_TOKEN)
+
+
+"""def run_discord_bot():
     intents = discord.Intents.default()
     intents.message_content = True
 
@@ -56,8 +75,4 @@ def run_discord_bot():
             await message.channel.send(response)
         else:
             return
-
-    client.run(DISCORD_TOKEN)
-
-
-run_discord_bot()
+"""
