@@ -78,7 +78,7 @@ async def status_loop():
     initialize_settings_file()
     status = read_status_from_settings_file()
 
-    await client.change_presence(activity=discord.Game(name=status))
+    await client.change_presence(activity=discord.CustomActivity(name=status))
 
 
 @client.command(pass_context=True)
