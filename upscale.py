@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import logging
 import sys
 from collections import OrderedDict
@@ -16,10 +13,10 @@ from rich import print
 from rich.logging import RichHandler
 from rich.progress import BarColumn, Progress, TaskID, TimeRemainingColumn
 
-import utils.dataops as ops
-from utils.architecture.RRDB import RRDBNet as ESRGAN
-from utils.architecture.SPSR import SPSRNet as SPSR
-from utils.architecture.SRVGG import SRVGGNetCompact as RealESRGANv2
+import lib.dataops as ops
+from lib.RRDB import RRDBNet as ESRGAN
+from lib.SPSR import SPSRNet as SPSR
+from lib.SRVGG import SRVGGNetCompact as RealESRGANv2
 
 
 class SeamlessOptions(str, Enum):

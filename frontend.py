@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from typing import List
+import discord
 
 from lib import (
     get_all_models,
@@ -19,6 +20,7 @@ from lib import (
     sort_input_images,
     convert_all_to_bitmap,
     clean_up,
+    write_status_to_settings_file,
 )
 from upscale import Upscale
 
@@ -158,7 +160,7 @@ def upscale_process(
     bw_model: str = None,
     c_model: str = None,
     bitmap_mode: bool = None,
-    ctx=None,
+    status_to_file: bool = False,
 ) -> str:
     try:
         # Download files
@@ -168,7 +170,10 @@ def upscale_process(
         bw_models_folder = os.path.join(os.getcwd(), "models/blackwhite")
         c_models_folder = os.path.join(os.getcwd(), "models/color")
 
-        print("Downloading files")
+        current_status = "Downloading files"
+        if status_to_file:
+            write_status_to_settings_file(current_status)
+        print(current_status)
 
         downloaded_file = litterbox_client.file_download(link_to_zip)
 
@@ -176,10 +181,17 @@ def upscale_process(
             clean_up()
             return downloaded_file
 
-        print("Download complete")
+        current_status = "Download complete"
+        if status_to_file:
+            write_status_to_settings_file(current_status)
+
+        print(current_status)
 
         if downloaded_file.lower().endswith(".zip"):
-            print("Unzipping images")
+            current_status = "Unzipping images"
+            if status_to_file:
+                write_status_to_settings_file(current_status)
+            print(current_status)
             # Unzip files
             unzip_files(downloaded_file)
             # Sort images based on color/bw
@@ -192,11 +204,18 @@ def upscale_process(
             ):
                 clean_up()
                 return "# Error:\nFile must be a PNG or a JPG format (`*.png, *.jpg, *.jpeg`)"
-        print("Sorting images based on color/blackwhite")
+
+        current_status = "Sorting images"
+        if status_to_file:
+            write_status_to_settings_file(current_status)
+        print(current_status)
         sort_input_images()
 
         # Upscaling
-        print("Upscaling images")
+        current_status = "Upscaling images"
+        if status_to_file:
+            write_status_to_settings_file(current_status)
+        print(current_status)
         # Upscale the bw images
         if bw_model is None:
             bw_model = os.path.join(bw_models_folder, get_default_black_white_model())
@@ -254,14 +273,23 @@ def upscale_process(
         upscale.run()
 
         if bitmap_mode:
-            print("Converting black and white images to bitmap")
+            current_status = "Converting to bitmap"
+            if status_to_file:
+                write_status_to_settings_file(current_status)
+            print(current_status)
             convert_all_to_bitmap()
 
-        print("Creating zip files")
+        current_status = "Creating zip files"
+        if status_to_file:
+            write_status_to_settings_file(current_status)
+        print(current_status)
         # Prepare the files for upload to Litterbox by zipping them in groups of 1 gigabyte
         zip_files = create_output_zip_files()
 
-        print("Uploading files")
+        current_status = "Uploading files"
+        if status_to_file:
+            write_status_to_settings_file(current_status)
+        print(current_status)
         links = []
         for zip_file in zip_files:
             link = litterbox_client.file_upload(
@@ -285,38 +313,11 @@ def upscale_process(
 
         clean_up()
         print(message)
+        if status_to_file:
+            write_status_to_settings_file("Idle")
         return message
     except Exception as e:
         print(e)
+        if status_to_file:
+            write_status_to_settings_file("Error occurred during upscale process")
         return "Something bad happened, sorry"
-
-
-def handle_command(message_args: List[str], ctx=None) -> str:
-    print(message_args)
-
-    if message_args[0] == "set":
-        if message_args[1] == "model":
-            if message_args[2] == "blackwhite":
-                return set_default_bw_model(message_args[3])
-            if message_args[2] == "color":
-                return set_default_c_model(message_args[3])
-        if message_args[1] == "bitmap":
-            return set_bitmap_mode(message_args[2])
-    if message_args[0] == "show":
-        if message_args[1] == "models":
-            if message_args[2] == "all":
-                return list_all_models()
-            if message_args[2] == "blackwhite":
-                return list_bw_models()
-            if message_args[2] == "color":
-                return list_c_models()
-        if message_args[1] == "settings":
-            return list_settings()
-    if message_args[0] == "help":
-        return list_commands()
-    if message_args[0] == "upscale":
-        return upscale_process(message_args[1], ctx=ctx)
-    return "I'm sorry, but I did not understand that command\n" + list_commands()
-
-
-print(upscale_process("https://files.catbox.moe/2kq7oa.zip"))

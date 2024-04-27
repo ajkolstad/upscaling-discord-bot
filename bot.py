@@ -1,10 +1,18 @@
 import sys
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from dotenv import dotenv_values
+from typing import Callable, Any, Coroutine, List
+import functools
+import asyncio
 
-from frontend import handle_command
+import frontend
+from lib import (
+    initialize_settings_file,
+    read_status_from_settings_file,
+    write_status_to_settings_file,
+)
 
 try:
     DISCORD_TOKEN = dotenv_values(".env")["DISCORD_TOKEN"]
@@ -20,59 +28,65 @@ intents.message_content = True
 client = commands.Bot(command_prefix="!", intents=intents)
 
 
+def to_thread(func: Callable) -> Coroutine:
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return asyncio.to_thread(func, *args, **kwargs)
+
+    return wrapper
+
+
+@to_thread
+def handle_command(message_args: List[str]) -> str:
+    print(message_args)
+
+    if message_args[0] == "set":
+        if message_args[1] == "model":
+            if message_args[2] == "blackwhite":
+                return frontend.set_default_bw_model(message_args[3])
+            if message_args[2] == "color":
+                return frontend.set_default_c_model(message_args[3])
+        if message_args[1] == "bitmap":
+            return frontend.set_bitmap_mode(message_args[2])
+    if message_args[0] == "show":
+        if message_args[1] == "models":
+            if message_args[2] == "all":
+                return frontend.list_all_models()
+            if message_args[2] == "blackwhite":
+                return frontend.list_bw_models()
+            if message_args[2] == "color":
+                return frontend.list_c_models()
+        if message_args[1] == "settings":
+            return frontend.list_settings()
+    if message_args[0] == "help":
+        return frontend.list_commands()
+    if message_args[0] == "upscale":
+        return frontend.upscale_process(message_args[1], status_to_file=True)
+    return (
+        "I'm sorry, but I did not understand that command\n" + frontend.list_commands()
+    )
+
+
 @client.event
 async def on_ready():
     print(str(client.user) + " is now running!")
+    status_loop.start()
+
+
+@tasks.loop(seconds=5)  # repeat after every 5 seconds
+async def status_loop():
+    initialize_settings_file()
+    status = read_status_from_settings_file()
+
+    await client.change_presence(activity=discord.Game(name=status))
 
 
 @client.command(pass_context=True)
 async def upscaler(ctx, *args):
-    await ctx.send(handle_command(list(args)))
+    res = await handle_command(args)
+    print(res)
+    await ctx.send(res)
 
 
+write_status_to_settings_file("Idle")
 client.run(DISCORD_TOKEN)
-
-
-"""def run_discord_bot():
-    intents = discord.Intents.default()
-    intents.message_content = True
-
-    client = discord.Client(intents=intents)
-
-    @client.event
-    async def on_ready():
-        print(str(client.user) + " is now running!")
-
-    @client.event
-    async def on_message(message):
-        if message.author == client.user:
-            return
-
-        print(message)
-
-        username = str(message.author)
-        user_id = str(message.author.id)
-        user_message = str(message.content)
-        channel = str(message.channel)
-
-        print(
-            "Got message '"
-            + user_message
-            + "' from user '"
-            + username
-            + "' in channel '"
-            + channel
-            + "'"
-        )
-
-        if user_message[0] == "!":
-            user_message = user_message[1:]
-
-            user_command = user_message.lower()
-
-            response = handle_command(user_command)
-
-            await message.channel.send(response)
-        else:
-            return
-"""

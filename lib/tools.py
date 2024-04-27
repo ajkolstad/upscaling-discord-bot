@@ -16,6 +16,7 @@ BASE_FORMAT = {
     "DefaultBlackWhiteModel": "",
     "DefaultColorModel": "",
     "DefaultBitmapBehavior": False,
+    "CurrentUpscalerStatus": "Idle",
 }
 
 
@@ -246,6 +247,30 @@ def get_settings() -> dict:
         file_data = json.load(file)
 
     return file_data
+
+
+def write_status_to_settings_file(status: str):
+    initialize_settings_file()
+
+    with open(SETTINGS_FILENAME, "r+") as file:
+        file_data = json.load(file)
+
+    file_data["CurrentUpscalerStatus"] = status
+
+    with open(SETTINGS_FILENAME, "w") as file:
+        json.dump(file_data, file, indent=4)
+
+    return True
+
+
+def read_status_from_settings_file() -> str:
+    initialize_settings_file()
+
+    with open(SETTINGS_FILENAME, "r+") as file:
+        file_data = json.load(file)
+
+    status = file_data["CurrentUpscalerStatus"]
+    return status
 
 
 def is_grey_scale(img_path) -> bool:
