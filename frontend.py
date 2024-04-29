@@ -163,6 +163,11 @@ def upscale_process(
     status_to_file: bool = False,
 ) -> str:
     try:
+        current_status = "Initializing"
+        if status_to_file:
+            write_status_to_settings_file(current_status)
+        print(current_status, flush=True)
+
         # Download files
         litterbox_client = LitterBox()
 
@@ -173,7 +178,7 @@ def upscale_process(
         current_status = "Downloading files"
         if status_to_file:
             write_status_to_settings_file(current_status)
-        print(current_status)
+        print(current_status, flush=True)
 
         downloaded_file = litterbox_client.file_download(link_to_zip)
 
@@ -185,13 +190,13 @@ def upscale_process(
         if status_to_file:
             write_status_to_settings_file(current_status)
 
-        print(current_status)
+        print(current_status, flush=True)
 
         if downloaded_file.lower().endswith(".zip"):
             current_status = "Unzipping images"
             if status_to_file:
                 write_status_to_settings_file(current_status)
-            print(current_status)
+            print(current_status, flush=True)
             # Unzip files
             unzip_files(downloaded_file)
             # Sort images based on color/bw
@@ -208,14 +213,14 @@ def upscale_process(
         current_status = "Sorting images"
         if status_to_file:
             write_status_to_settings_file(current_status)
-        print(current_status)
+        print(current_status, flush=True)
         sort_input_images()
 
         # Upscaling
         current_status = "Upscaling images"
         if status_to_file:
             write_status_to_settings_file(current_status)
-        print(current_status)
+        print(current_status, flush=True)
         # Upscale the bw images
         if bw_model is None:
             bw_model = os.path.join(bw_models_folder, get_default_black_white_model())
@@ -276,26 +281,26 @@ def upscale_process(
             current_status = "Converting to bitmap"
             if status_to_file:
                 write_status_to_settings_file(current_status)
-            print(current_status)
+            print(current_status, flush=True)
             convert_all_to_bitmap()
 
         current_status = "Creating zip files"
         if status_to_file:
             write_status_to_settings_file(current_status)
-        print(current_status)
+        print(current_status, flush=True)
         # Prepare the files for upload to Litterbox by zipping them in groups of 1 gigabyte
         zip_files = create_output_zip_files()
 
         current_status = "Uploading files"
         if status_to_file:
             write_status_to_settings_file(current_status)
-        print(current_status)
+        print(current_status, flush=True)
         links = []
         for zip_file in zip_files:
             link = litterbox_client.file_upload(
                 os.path.join(output_folder, zip_file["filename"]), 72
             )
-            print(link)
+            print(link, flush=True)
             links.append({"link": link, "files": zip_file["files"]})
 
         message = "# Upscaling process complete\nThe following zip file(s) have been created with the shown contents"
@@ -312,12 +317,12 @@ def upscale_process(
                 message += "\n## [" + str(filename) + "](" + link["link"] + ")"
 
         clean_up()
-        print(message)
+        print(message, flush=True)
         if status_to_file:
             write_status_to_settings_file("Idle")
         return message
     except Exception as e:
-        print(e)
+        print(e, flush=True)
         if status_to_file:
-            write_status_to_settings_file("Error occurred during upscale process")
-        return "Something bad happened, sorry"
+            write_status_to_settings_file("An error occurred during upscale process")
+        return "An error occurred during the upscale process"

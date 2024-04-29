@@ -14,12 +14,14 @@ from lib import (
     write_status_to_settings_file,
 )
 
+IDLE_STATUS = "Idle"
+
 try:
     DISCORD_TOKEN = dotenv_values(".env")["DISCORD_TOKEN"]
     if DISCORD_TOKEN is None or DISCORD_TOKEN == "":
         raise KeyError
 except KeyError:
-    print("Please enter your discord token in the .env file")
+    print("Please enter your discord token in the .env file", flush=True)
     sys.exit(0)
 
 
@@ -38,7 +40,7 @@ def to_thread(func: Callable) -> Coroutine:
 
 @to_thread
 def handle_command(message_args: List[str]) -> str:
-    print(message_args)
+    print(message_args, flush=True)
 
     if message_args[0] == "set":
         if message_args[1] == "model":
@@ -61,7 +63,10 @@ def handle_command(message_args: List[str]) -> str:
     if message_args[0] == "help":
         return frontend.list_commands()
     if message_args[0] == "upscale":
-        return frontend.upscale_process(message_args[1], status_to_file=True)
+        if read_status_from_settings_file() != IDLE_STATUS:
+            return "The upscaler is already working on a batch. Please wait for it to finish before starting a new one."
+        else:
+            return frontend.upscale_process(message_args[1], status_to_file=True)
     return (
         "I'm sorry, but I did not understand that command\n" + frontend.list_commands()
     )
@@ -69,7 +74,7 @@ def handle_command(message_args: List[str]) -> str:
 
 @client.event
 async def on_ready():
-    print(str(client.user) + " is now running!")
+    print(str(client.user) + " is now running!", flush=True)
     status_loop.start()
 
 
@@ -77,14 +82,13 @@ async def on_ready():
 async def status_loop():
     initialize_settings_file()
     status = read_status_from_settings_file()
-
     await client.change_presence(activity=discord.CustomActivity(name=status))
 
 
 @client.command(pass_context=True)
 async def upscaler(ctx, *args):
     res = await handle_command(args)
-    print(res)
+    print(res, flush=True)
     await ctx.send(res)
 
 

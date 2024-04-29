@@ -1,14 +1,14 @@
-# Requires python 3.9
 torch
 torchvision
+torchaudio
 numpy
 rich
 typer
 discord
 responses
-
 pillow
 requests
 python-dotenv
 requests_toolbelt
 urllib3
+opencv-python
