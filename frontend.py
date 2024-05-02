@@ -1,9 +1,6 @@
 import os
 from pathlib import Path
 
-from typing import List
-import discord
-
 from lib import (
     get_all_models,
     get_black_white_models,

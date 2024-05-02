@@ -14,13 +14,12 @@ from rich.logging import RichHandler
 from rich.progress import BarColumn, Progress, TaskID, TimeRemainingColumn
 
 import lib.dataops as ops
-from lib.RRDB import RRDBNet as ESRGAN
-from lib.SPSR import SPSRNet as SPSR
-from lib.SRVGG import SRVGGNetCompact as RealESRGANv2
-
 from lib import (
     write_status_to_settings_file,
 )
+from lib.RRDB import RRDBNet as ESRGAN
+from lib.SPSR import SPSRNet as SPSR
+from lib.SRVGG import SRVGGNetCompact as RealESRGANv2
 
 
 class SeamlessOptions(str, Enum):
@@ -106,9 +105,7 @@ class Upscale:
         self.alpha_mode = alpha_mode
         self.log = log
         if self.fp16:
-            torch.set_default_tensor_type(
-                torch.HalfTensor if self.cpu else torch.cuda.HalfTensor
-            )
+            torch.set_default_dtype(torch.half)
 
     def run(self) -> None:
         model_chain = (
