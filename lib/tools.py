@@ -328,26 +328,39 @@ def unzip_files(zip_file_path: str) -> None:
     directories = os.listdir(input_folder)
 
     for item in directories:
-        folder = os.path.join(input_folder, item)
-        for root, dirs, files in os.walk(folder):
-            for file in files:
-                if (
-                    file.lower().endswith("png")
-                    or file.lower().endswith("jpg")
-                    or file.lower().endswith("jpeg")
-                ):
-
-                    target = os.path.join(root, file)
-                    os.replace(target, os.path.join(os.path.join(input_folder, file)))
-                else:
-                    os.remove(os.path.join(root, file))
-
+        item_path = os.path.join(input_folder, item)
+        if os.path.isfile(item_path):
             if (
-                not str(root).endswith("input_color")
-                and not str(root).endswith("input_blackwhite")
-                and not str(root).endswith("output_pre_bitmap")
+                item.lower().endswith("png")
+                or item.lower().endswith("jpg")
+                or item.lower().endswith("jpeg")
             ):
-                os.rmdir(root)
+                os.replace(item_path, os.path.join(os.path.join(input_folder, item)))
+            else:
+                os.remove(item_path)
+
+        else:
+            for root, dirs, files in os.walk(item_path, topdown=False):
+                for file in files:
+                    if (
+                        file.lower().endswith("png")
+                        or file.lower().endswith("jpg")
+                        or file.lower().endswith("jpeg")
+                    ):
+
+                        target = os.path.join(root, file)
+                        os.replace(
+                            target, os.path.join(os.path.join(input_folder, file))
+                        )
+                    else:
+                        os.remove(os.path.join(root, file))
+
+                if (
+                    not str(root).endswith("input_color")
+                    and not str(root).endswith("input_blackwhite")
+                    and not str(root).endswith("output_pre_bitmap")
+                ):
+                    os.rmdir(root)
 
         if os.path.isfile(zip_file_path):
             os.remove(zip_file_path)
