@@ -18,6 +18,10 @@ from lib.RRDB import RRDBNet as ESRGAN
 from lib.SPSR import SPSRNet as SPSR
 from lib.SRVGG import SRVGGNetCompact as RealESRGANv2
 
+from lib import (
+    write_status_to_settings_file,
+)
+
 
 class SeamlessOptions(str, Enum):
     TILE = "tile"
@@ -169,6 +173,9 @@ class Upscale:
         ) as progress:
             task_upscaling = progress.add_task("Upscaling", total=len(images))
             for idx, img_path in enumerate(images, 1):
+                status = "Upscaling image " + str(idx) + " of " + str(len(images))
+                write_status_to_settings_file(status)
+                print(status, flush=True)
                 img_input_path_rel = img_path.relative_to(self.input)
                 output_dir = self.output.joinpath(img_input_path_rel).parent
                 img_output_path_rel = output_dir.joinpath(f"{img_path.stem}.png")

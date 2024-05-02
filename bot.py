@@ -1,4 +1,5 @@
 import sys
+import os
 
 import discord
 from discord.ext import commands, tasks
@@ -6,6 +7,7 @@ from dotenv import dotenv_values
 from typing import Callable, Any, Coroutine, List
 import functools
 import asyncio
+import time
 
 import frontend
 from lib import (
@@ -16,17 +18,9 @@ from lib import (
 
 IDLE_STATUS = "Idle"
 
-try:
-    DISCORD_TOKEN = dotenv_values(".env")["DISCORD_TOKEN"]
-    if DISCORD_TOKEN is None or DISCORD_TOKEN == "":
-        raise KeyError
-except KeyError:
-    print("Please enter your discord token in the .env file", flush=True)
-    sys.exit(0)
-
-
 intents = discord.Intents.default()
 intents.message_content = True
+
 client = commands.Bot(command_prefix="!", intents=intents)
 
 
@@ -93,4 +87,9 @@ async def upscaler(ctx, *args):
 
 
 write_status_to_settings_file("Idle")
+
+try:
+    DISCORD_TOKEN = dotenv_values(".env")["DISCORD_TOKEN"]
+except KeyError:
+    DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 client.run(DISCORD_TOKEN)
