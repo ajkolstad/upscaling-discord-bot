@@ -4,6 +4,7 @@ import zipfile
 from os import path, getcwd
 from typing import List, Tuple, Optional
 
+import numpy as np
 from PIL import Image
 
 # from upscale import Upscale
@@ -276,13 +277,19 @@ def read_status_from_settings_file() -> str:
 def is_grey_scale(img_path) -> bool:
     img = Image.open(img_path).convert("RGB")
     w, h = img.size
-    for i in range(w):
-        for j in range(h):
-            r, g, b = img.getpixel((i, j))
-            if r != g != b:
-                if abs(r - g) > 5 or abs(g - b) > 5 or abs(b - r) > 5:
-                    return False
-    return True
+    colors = img.getcolors(w * h)
+    num, colors_rgb = zip(*colors)
+    red, green, blue = zip(*colors_rgb)
+    red = np.asarray(red)
+    green = np.asarray(green)
+    blue = np.asarray(blue)
+    if (
+        np.allclose(red, green, atol=5)
+        or np.allclose(green, blue, atol=5)
+        or np.allclose(blue, red, atol=5)
+    ):
+        return True
+    return False
 
 
 def sort_input_images() -> None:
@@ -407,6 +414,3 @@ def create_output_zip_files() -> List:
     )
 
     return created_zip_files
-
-
-clean_up()
