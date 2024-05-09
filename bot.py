@@ -1,13 +1,11 @@
-import sys
+import asyncio
+import functools
 import os
+from typing import Callable, Coroutine, List
 
 import discord
 from discord.ext import commands, tasks
 from dotenv import dotenv_values
-from typing import Callable, Any, Coroutine, List
-import functools
-import asyncio
-import time
 
 import frontend
 from lib import (
@@ -17,6 +15,7 @@ from lib import (
 )
 
 IDLE_STATUS = "Idle"
+FAIL_STATUS = "An error occurred during upscale process"
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -57,7 +56,10 @@ def handle_command(message_args: List[str]) -> str:
     if message_args[0] == "help":
         return frontend.list_commands()
     if message_args[0] == "upscale":
-        if read_status_from_settings_file() != IDLE_STATUS:
+        if (
+            read_status_from_settings_file() != IDLE_STATUS
+            and read_status_from_settings_file() != FAIL_STATUS
+        ):
             return "The upscaler is already working on a batch. Please wait for it to finish before starting a new one."
         else:
             return frontend.upscale_process(message_args[1], status_to_file=True)

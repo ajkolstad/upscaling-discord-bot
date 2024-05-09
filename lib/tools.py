@@ -4,6 +4,7 @@ import zipfile
 from os import path, getcwd
 from typing import List, Tuple, Optional
 
+import PIL
 import numpy as np
 from PIL import Image
 
@@ -307,16 +308,19 @@ def sort_input_images() -> None:
                 or file.lower().endswith("jpg")
                 or file.lower().endswith("jpeg")
             ):
-                if is_grey_scale(os.path.join(input_folder, file)):
-                    os.replace(
-                        os.path.join(os.path.join(input_folder, file)),
-                        os.path.join(os.path.join(black_white_folder_path, file)),
-                    )
-                else:
-                    os.replace(
-                        os.path.join(os.path.join(input_folder, file)),
-                        os.path.join(os.path.join(color_folder_path, file)),
-                    )
+                try:
+                    if is_grey_scale(os.path.join(input_folder, file)):
+                        os.replace(
+                            os.path.join(os.path.join(input_folder, file)),
+                            os.path.join(os.path.join(black_white_folder_path, file)),
+                        )
+                    else:
+                        os.replace(
+                            os.path.join(os.path.join(input_folder, file)),
+                            os.path.join(os.path.join(color_folder_path, file)),
+                        )
+                except PIL.UnidentifiedImageError:
+                    os.remove(os.path.join(input_folder, file))
 
 
 def unzip_files(zip_file_path: str) -> None:
@@ -427,3 +431,6 @@ def create_output_zip_files() -> List:
     )
 
     return created_zip_files
+
+
+print(is_grey_scale("./hello.jpg"))
