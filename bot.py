@@ -14,9 +14,6 @@ from lib import (
     write_status_to_settings_file,
 )
 
-IDLE_STATUS = "Idle"
-FAIL_STATUS = "An error occurred during upscale process"
-
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -57,8 +54,8 @@ def handle_command(message_args: List[str]) -> str:
         return frontend.list_commands()
     if message_args[0] == "upscale":
         if (
-            read_status_from_settings_file() != IDLE_STATUS
-            and read_status_from_settings_file() != FAIL_STATUS
+                read_status_from_settings_file() != frontend.IDLE_STATUS
+                and read_status_from_settings_file() != frontend.FAIL_STATUS
         ):
             return "The upscaler is already working on a batch. Please wait for it to finish before starting a new one."
         else:

@@ -1,5 +1,6 @@
 import mimetypes
 import sys
+from http import HTTPStatus
 from os import path, getcwd
 from typing import Optional
 
@@ -7,6 +8,7 @@ import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 LITTERBOX_URL = "https://litterbox.catbox.moe/resources/internals/api.php"
+LITTERBOX_STATUS_URL = "https://status.catbox.moe"
 
 
 def get_file_type(filename):
@@ -21,6 +23,21 @@ def get_file_type(filename):
 
 
 class LitterBox:
+
+    @staticmethod
+    def get_status():
+        response = requests.get(
+            LITTERBOX_STATUS_URL + "/api/v1/issues/all",
+            headers={
+                "Content-Type": "application/json",
+                "X-Auth-Token": "",
+                "X-Auth-Secret": "",
+            },
+        )
+        if not response.status_code == HTTPStatus.OK:
+            print("Litterbox status site improper response")
+            return False
+        print(response.json())
 
     @staticmethod
     def _progress_bar(monitor):

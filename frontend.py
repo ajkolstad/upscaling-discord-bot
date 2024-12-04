@@ -22,6 +22,8 @@ from lib import (
 from upscale import Upscale
 
 DISCORD_CHARACTER_LIMIT = 2000
+FAIL_STATUS = "An error occurred during the upscale process"
+IDLE_STATUS = "Idle"
 
 
 def list_all_models() -> str:
@@ -138,6 +140,7 @@ def list_settings() -> str:
 
 
 def list_commands() -> str:
+    # TODO: make this list generated from the list of commands instead
     return (
         "# Commands"
         + "\n- `!upscaler help`: Shows this message"
@@ -321,5 +324,5 @@ def upscale_process(
     except Exception as e:
         print(e, flush=True)
         if status_to_file:
-            write_status_to_settings_file("An error occurred during upscale process")
-        return "An error occurred during the upscale process"
+            write_status_to_settings_file(FAIL_STATUS)
+        return FAIL_STATUS

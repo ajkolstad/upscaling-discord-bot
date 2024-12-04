@@ -87,6 +87,12 @@ class Upscale:
         alpha_mode: Optional[AlphaOptions] = None,
         log: logging.Logger = logging.getLogger(),
     ) -> None:
+        device = f"cuda:{device_id}"
+        if self.cpu:
+            device = "cpu"
+        if torch.backends.mps.is_available():
+            device = "mps"
+
         self.model_str = model
         self.input = input.resolve()
         self.output = output.resolve()
@@ -96,7 +102,7 @@ class Upscale:
         self.seamless = seamless
         self.cpu = cpu
         self.fp16 = fp16
-        self.device = torch.device("cpu" if self.cpu else f"cuda:{device_id}")
+        self.device = torch.device(device)
         self.cache_max_split_depth = cache_max_split_depth
         self.binary_alpha = binary_alpha
         self.ternary_alpha = ternary_alpha

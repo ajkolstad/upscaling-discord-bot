@@ -30,6 +30,7 @@ def create_folders():
 
 def clean_up():
     create_image_folders()
+
     input_folder = os.path.join(os.getcwd(), "input")
     black_white_folder_path = os.path.join(input_folder, "input_blackwhite")
     color_folder_path = os.path.join(input_folder, "input_color")
