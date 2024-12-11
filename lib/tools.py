@@ -432,6 +432,3 @@ def create_output_zip_files() -> List:
     )
 
     return created_zip_files
-
-
-print(is_grey_scale("./hello.jpg"))

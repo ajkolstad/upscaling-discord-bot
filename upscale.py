@@ -14,9 +14,6 @@ from rich.logging import RichHandler
 from rich.progress import BarColumn, Progress, TaskID, TimeRemainingColumn
 
 import lib.dataops as ops
-from lib import (
-    write_status_to_settings_file,
-)
 from lib.RRDB import RRDBNet as ESRGAN
 from lib.SPSR import SPSRNet as SPSR
 from lib.SRVGG import SRVGGNetCompact as RealESRGANv2
@@ -102,7 +99,7 @@ class Upscale:
         self.seamless = seamless
         self.cpu = cpu
         self.fp16 = fp16
-        self.device = torch.device(device)
+        self.device = self.device = torch.device(device)
         self.cache_max_split_depth = cache_max_split_depth
         self.binary_alpha = binary_alpha
         self.ternary_alpha = ternary_alpha
@@ -111,7 +108,7 @@ class Upscale:
         self.alpha_mode = alpha_mode
         self.log = log
         if self.fp16:
-            torch.set_default_dtype(torch.half)
+            torch.set_default_dtype(torch.half if self.cpu else torch.cuda.HalfTensor)
 
     def run(self) -> None:
         model_chain = (
@@ -176,9 +173,6 @@ class Upscale:
         ) as progress:
             task_upscaling = progress.add_task("Upscaling", total=len(images))
             for idx, img_path in enumerate(images, 1):
-                status = "Upscaling image " + str(idx) + " of " + str(len(images))
-                write_status_to_settings_file(status)
-                print(status, flush=True)
                 img_input_path_rel = img_path.relative_to(self.input)
                 output_dir = self.output.joinpath(img_input_path_rel).parent
                 img_output_path_rel = output_dir.joinpath(f"{img_path.stem}.png")
@@ -194,9 +188,9 @@ class Upscale:
                     progress.advance(task_upscaling)
                     continue
                 # read image
-                img = cv2.imread(str(img_path.absolute()), cv2.IMREAD_UNCHANGED)
-                # if len(img.shape) < 3:
-                #     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+                img = cv2.imread(str(img_path.absolute()), cv2.IMREAD_GRAYSCALE)
+                if len(img.shape) < 3:
+                    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
                 # Seamless modes
                 if self.seamless == SeamlessOptions.TILE:

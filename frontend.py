@@ -241,7 +241,7 @@ def upscale_process(
             skip_existing=False,
             delete_input=True,
             # seamless=False,
-            cpu=False,
+            cpu=True,
             fp16=True,
             device_id=0,
             cache_max_split_depth=False,
@@ -265,7 +265,7 @@ def upscale_process(
             skip_existing=False,
             delete_input=True,
             # seamless=False,
-            cpu=False,
+            cpu=True,
             fp16=True,
             device_id=0,
             cache_max_split_depth=False,
@@ -326,3 +326,6 @@ def upscale_process(
         if status_to_file:
             write_status_to_settings_file(FAIL_STATUS)
         return FAIL_STATUS
+
+
+upscale_process("https://files.catbox.moe/5ex5xv.zip", None, None, True, False)
